@@ -56,26 +56,21 @@ public class RegionWSServer extends EvaWSServer {
 
         for (String acceptedValue : VariantDBAdaptor.QueryParams.acceptedValues) {
             if (uriInfo.getQueryParameters().containsKey(acceptedValue)) {
-                List<String> values = uriInfo.getQueryParameters().get(acceptedValue);
-                String csv = values.get(0);
-                for (int i = 1; i < values.size(); i++) {
-                    csv += "," + values.get(i);
-                }
-                queryOptions.add(acceptedValue, csv);
+                queryOptions.add(acceptedValue, uriInfo.getQueryParameters().get(acceptedValue).get(0));
             }
         }
 
         if (reference != null && !reference.isEmpty()) {
-            queryOptions.put("reference", reference);
+            queryOptions.put(VariantDBAdaptor.REFERENCE, reference);
         }
         if (alternate != null && !alternate.isEmpty()) {
-            queryOptions.put("alternate", alternate);
+            queryOptions.put(VariantDBAdaptor.ALTERNATE, alternate);
         }
         if (!missingAlleles.isEmpty()) {
-            queryOptions.put("missingAlleles", missingAlleles);
+            queryOptions.put(VariantDBAdaptor.MISSING_ALLELES, missingAlleles);
         }
         if (!missingGenotypes.isEmpty()) {
-            queryOptions.put("missingGenotypes", missingGenotypes);
+            queryOptions.put(VariantDBAdaptor.MISSING_GENOTYPES, missingGenotypes);
         }
 
         queryOptions.put("merge", merge);
@@ -101,7 +96,7 @@ public class RegionWSServer extends EvaWSServer {
             }
         } else if (regionsSize <= 1000000) {
             if (regions.isEmpty()) {
-                if (!queryOptions.containsKey("id") && !queryOptions.containsKey("gene")) {
+                if (!queryOptions.containsKey(VariantDBAdaptor.ID) && !queryOptions.containsKey(VariantDBAdaptor.GENE)) {
                     return createErrorResponse("Some positional filer is needed, like region, gene or id.");
                 } else {
                     return createOkResponse(variantMongoDbAdaptor.getAllVariants(queryOptions));

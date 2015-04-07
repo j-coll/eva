@@ -40,18 +40,14 @@ public class GeneWSServer extends EvaWSServer {
     @ApiOperation(httpMethod = "GET", value = "Retrieves all the variants of a gene", response = QueryResponse.class)
     public Response getVariantsByGene(@PathParam("gene") String geneId,
                                       @QueryParam("ref") String reference,
-                                      @QueryParam("alt") String alternate, 
-                                      @QueryParam("effects") String effects,
+                                      @QueryParam("alt") String alternate,
                                       @QueryParam("studies") String studies,
                                       @QueryParam("species") String species,
-                                      @DefaultValue("-1f") @QueryParam("maf") float maf,
+                                      @DefaultValue("") @QueryParam("maf") String maf,
                                       @DefaultValue("-1") @QueryParam("miss_alleles") int missingAlleles,
                                       @DefaultValue("-1") @QueryParam("miss_gts") int missingGenotypes,
-                                      @DefaultValue("=") @QueryParam("maf_op") String mafOperator,
-                                      @DefaultValue("=") @QueryParam("miss_alleles_op") String missingAllelesOperator,
-                                      @DefaultValue("=") @QueryParam("miss_gts_op") String missingGenotypesOperator,
                                       @DefaultValue("") @QueryParam("type") String variantType)
-            throws IllegalOpenCGACredentialsException, UnknownHostException, IOException {
+            throws IllegalOpenCGACredentialsException, IOException {
         try {
             checkParams();
         } catch (VersionException | SpeciesException ex) {
@@ -59,39 +55,33 @@ public class GeneWSServer extends EvaWSServer {
         }
         
         VariantDBAdaptor variantMongoDbAdaptor = DBAdaptorConnector.getVariantDBAdaptor(species);
-        
+
+        for (String acceptedValue : VariantDBAdaptor.QueryParams.acceptedValues) {
+            if (uriInfo.getQueryParameters().containsKey(acceptedValue)) {
+                queryOptions.add(acceptedValue, uriInfo.getQueryParameters().get(acceptedValue).get(0));
+            }
+        }
+
         if (reference != null) {
-            queryOptions.put("reference", reference);
+            queryOptions.put(VariantDBAdaptor.REFERENCE, reference);
         }
         if (alternate != null) {
-            queryOptions.put("alternate", alternate);
-        }
-        if (effects != null) {
-            queryOptions.put("effect", Arrays.asList(effects.split(",")));
+            queryOptions.put(VariantDBAdaptor.ALTERNATE, alternate);
         }
         if (studies != null) {
-            queryOptions.put("studies", Arrays.asList(studies.split(",")));
+            queryOptions.put(VariantDBAdaptor.STUDIES, Arrays.asList(studies.split(",")));
         }
         if (!variantType.isEmpty()) {
-            queryOptions.put("type", variantType);
+            queryOptions.put(VariantDBAdaptor.TYPE, variantType);
         }
-        if (maf >= 0) {
-            queryOptions.put("maf", maf);
-            if (mafOperator != null) {
-                queryOptions.put("opMaf", mafOperator);
-            }
+        if (!maf.isEmpty()) {
+            queryOptions.put(VariantDBAdaptor.MAF, maf);
         }
         if (missingAlleles >= 0) {
-            queryOptions.put("missingAlleles", missingAlleles);
-            if (missingAllelesOperator != null) {
-                queryOptions.put("opMissingAlleles", missingAllelesOperator);
-            }
+            queryOptions.put(VariantDBAdaptor.MISSING_ALLELES, missingAlleles);
         }
         if (missingGenotypes >= 0) {
-            queryOptions.put("missingGenotypes", missingGenotypes);
-            if (missingGenotypesOperator != null) {
-                queryOptions.put("opMissingGenotypes", missingGenotypesOperator);
-            }
+            queryOptions.put(VariantDBAdaptor.MISSING_GENOTYPES, missingGenotypes);
         }
 
         return createOkResponse(variantMongoDbAdaptor.getAllVariantsByGene(geneId, queryOptions));
@@ -100,8 +90,7 @@ public class GeneWSServer extends EvaWSServer {
     @GET
     @Path("/ranking")
     @ApiOperation(httpMethod = "GET", value = "Retrieves gene ranking", response = QueryResponse.class)
-    public Response genesRankingByVariantsNumber(@PathParam("gene") String geneId,
-                                                 @QueryParam("species") String species,
+    public Response genesRankingByVariantsNumber(@QueryParam("species") String species,
                                                  @DefaultValue("10") @QueryParam("limit") int limit,
                                                  @DefaultValue("desc") @QueryParam("sort") String sort,
                                                  @DefaultValue("") @QueryParam("type") String variantType)

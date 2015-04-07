@@ -8,6 +8,7 @@ import com.google.common.base.Splitter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
@@ -118,7 +119,7 @@ public class EvaWSServer {
 
         init(version, uriInfo);
 
-        logger.info("EvaWSServer: in 'constructor'");
+        logger.debug("EvaWSServer: in 'constructor'");
     }
 
     protected void init(String version, UriInfo uriInfo) {
@@ -136,7 +137,7 @@ public class EvaWSServer {
         queryOptions = new QueryOptions();
         // logger = new Logger();
         // logger.setLevel(Logger.DEBUG_LEVEL);
-        logger.info("GenericrestWSServer: in 'init' method");
+        logger.debug("GenericrestWSServer: in 'init' method");
     }
 
 
@@ -176,9 +177,9 @@ public class EvaWSServer {
         queryResponse.setQueryOptions(queryOptions);
         
         // Guarantee that the QueryResponse object contains a coll of results
-        Collection coll;
-        if (obj instanceof Collection) {
-            coll = (Collection) obj;
+        List coll;
+        if (obj instanceof List) {
+            coll = (List) obj;
         } else {
             coll = new ArrayList();
             coll.add(obj);
